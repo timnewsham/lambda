@@ -1,0 +1,23 @@
+#!./lambda
+# a minimal program for computing primes.
+# run with -n : the prelude isn't needed
+
+[defmacro Y 0 \f ((\x f (x x)) (\x f (x x)))]
+[defmacro LET 3 ((\arg0 arg2) arg1)]
+[defmacro LETREC 3 [LET arg0 ([Y] (\arg0 arg1)) arg2]]
+[LET dot (\f \g \x f (g x))
+[LET false (\x \y x)
+[LET true (\x \y y)
+[LET if (\b \t \e b e t)
+[LET not (\b b true false)
+[LET nil (\f \g f)
+[LET cons (\x \xs \f \g g x xs)
+[LETREC filter (\p \xs xs nil (\y \ys if (p y) (cons y (filter p ys)) (filter p ys)))
+[LETREC nubBy (\f \xs xs nil (\y \ys (cons y (nubBy f (filter (dot not (f y)) ys)))))
+[LETREC iter (\f \x0 (cons x0 (iter f (f x0))))
+[LETREC take (\n \xs (if (eq n 0) nil (xs nil (\y \ys (cons y (take (add n -1) ys))))))
+[LETREC traceList (\id \xs xs done (\y \ys seq (trace id y) (traceList id ys)))
+[LET primes (nubBy (\x \y (eq (mod y x) 0)) (iter (add 1) 2))
+    (traceList Val (take 10 primes))
+  ]]]]]]]]]]]]]
+

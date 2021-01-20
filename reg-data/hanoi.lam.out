@@ -1,0 +1,23 @@
+Move: 1
+From: 1
+To__: 3
+Move: 2
+From: 1
+To__: 2
+Move: 1
+From: 3
+To__: 2
+Move: 3
+From: 1
+To__: 3
+Move: 1
+From: 2
+To__: 1
+Move: 2
+From: 2
+To__: 3
+Move: 1
+From: 1
+To__: 3
+Result: done
+done.

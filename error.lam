@@ -1,0 +1,26 @@
+#!./lambda.py
+# an example of where macros can go wrong.
+
+# standard macros
+[defmacro Y 0 \f ((\x f (x x)) (\x f (x x)))]
+[defmacro LET 3 ((\arg0 arg2) arg1)]
+[defmacro LETREC 3 [LET arg0 ([Y] (\arg0 arg1)) arg2]]
+
+# algebraic data type for lists, mapped to lambda expressions.
+# see http://www.cs.nott.ac.uk/~nhn/TFP2006/Papers/03-JansenKoopmanPlasmeijer-EfficientInterpretation.pdf
+# data list = nil | cons x xs
+[defmacro NIL 0 (\f \g f)]
+[defmacro CONS 2 (\f \g g arg0 arg1)]
+[LET head (\xs xs emptyListError (\y \ys y))
+ [LET tail (\xs xs emptyListError (\y \ys ys))
+
+  # if map's arg is "ff" this works, with 'f" it fails.
+  # some renaming is probably needed in macro processing.
+  #[LETREC map (\ff \xs xs [NIL] (\y \ys [CONS (ff y) (map ff ys)]))
+  [LETREC map (\f \xs xs [NIL] (\y \ys [CONS (f y) (map f ys)]))
+
+   [LET lst [CONS 3 [CONS 4 [CONS 5 [NIL]]]]
+     # this fails if map's arg is "f" 
+     (head (tail (map (add 2) lst)))
+   ]]]]
+

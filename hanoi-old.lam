@@ -1,0 +1,22 @@
+#!./lambda.py
+# old implementation of towers of hanoi
+
+[WITHLIST
+ [LET app3 (\a \b \c (app a (app b c)))
+ [LET lst3 (\a \b \c (cons a (cons b (cons c nil))))
+ [LET start (lst3 3 2 1)
+ # return a list of dummy numbers while emitting hanoi move instructions..
+ [LET traceMove (\x \a \c lst3 (trace Move x)
+                               (trace From a)
+                               (trace To__ c))
+ # returns a dummy list of integers.  We run this for its side effects
+ # which print out the moves
+ [LETREC hanoi (\xs \a \b \c xs nil
+                (\y \ys (app3 (hanoi ys a c b) 
+                              (traceMove y a c)
+                              (hanoi ys b a c))))
+   # sum is used to add up the dummy numbers and force evaluation of
+   # the traces.  The result is just a dummy value.  The trace side
+   # effects are the real output.
+   (sum (hanoi start 1 2 3))
+ ]]]]]]

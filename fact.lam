@@ -1,0 +1,6 @@
+#!./lambda.py
+# factorial using letrec.
+
+[WITHBOOL
+ [LETREC fact (\n (if (eq n 0) 1 (mul n (fact (add n -1))))) 
+        (fact 5)]]

@@ -1,0 +1,8 @@
+printList: 1
+printList: 2
+printList: 3
+XXX: 1
+XXX: 2
+XXX: 3
+Result: 6
+done.

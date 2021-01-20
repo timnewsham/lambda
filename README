@@ -1,0 +1,78 @@
+feb 2008
+goal: write a small lazy lambda calc evaluator
+
+right now I have a small hand-written parser and lexer and an
+evaluator.  The parser supports macro expansions.  The engine
+supports normal lazy evaluation and some builtins.
+
+
+Syntax:
+  123                         decimal integer literal, negative sign allowed
+  foo123_                     identifier used for variables
+  \id expr                    lambda expression taking variable id
+  (expr)                      parenthesized
+  [macro arg arg arg]         macro expanded during compilation not runtime
+
+Macros:
+  defmacro name nargs body    Define a new macro.  Identifiers arg0..argn are
+                              replaced during macro expansion.
+
+Builtins:
+    add x y                   adds two ints (prob joins two symbols too :)
+    mul x y                   multiplies two ints (prob does symbol repetition)
+    div x y                   divide two ints
+    mod x y                   takes the modulo of two ints
+    eq  x y                   computes equality of ints (or symbols?) 
+    lt  x y                   returns true if x is less than y
+    seq x y                   force evaluation of x but return the value y
+    trace id expr             print id and expr before returning expr
+
+When using "trace" keep in mind that this is a lazy language.  Trace
+prints will only happen when a value is evaluated.  Tricks can be
+used to force evaluation.  See prime.lam and hanoi.lam for examples.
+
+To evaluate a script run
+   python lamb.py file1.lam file2.lam file3.lam
+   python lamb.py -n file.lam
+or
+   ./Lambda.hs file.lam
+
+If "-n" isnt given, prelude.lam is prepended to your source file.
+The prelude.lam documents the builtins and prelude function definitions.
+
+
+Examples:
+    (add 3 4) 
+        Evaluates to 7
+
+    [defmacro let 3 ((\arg0 arg2) arg1)]
+    [let x 3 (add x x)]
+        Defines the macro "let" and uses it.  Evaluates to 6.
+
+    [defmacro let 3 ((\arg0 arg2) arg1)]
+    [let Y (\f ((\x f (x x)) (\x f (x x))))
+     [let fact2 (\f \n (if (eq n 0) 1 (mul n (f (add n -1)))))
+             (Y fact2 5)]]
+        Defines the Y-combinator (fixed-point operator) and uses it
+        to define a recursive function.  Evaluates the factorial of 5,
+        returning 120.
+    
+    [defmacro Y 0 \f ((\x f (x x)) (\x f (x x)))]
+    [defmacro let 3 ((\arg0 arg2) arg1)]
+    [defmacro letrec 3 [let arg0 ([Y] (\arg0 arg1)) arg2]]
+    [letrec fact (\n (if (eq n 0) 1 (mul n (fact (add n -1))))) (fact 5)]
+        Defines the macro "letrec" and uses it to define a recursive
+        function.  Evaluates "5!" which is 120.
+        
+
+See: fact.lam, fact2.lam, testmacro.lam, primes.lam, hanoi.lam
+
+TODO:
+  - There are some cases when using macros with functions that use the
+    same variable.  Some alpha conversion is probably needed.
+    See error.lam for an example.  This doesn't occur when using functions
+    instead of macros, probably because of the different ways in which
+    macros are expanded compared to how expansion works for function
+    application (where lambda variables are never renamed and shadow
+    any recursive renaming).
+

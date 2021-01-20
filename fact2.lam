@@ -1,0 +1,7 @@
+#!./lambda.py
+# factorial using the fixed point operator
+
+[WITHBOOL
+ [LET Y (\f ((\x f (x x)) (\x f (x x))))
+   [LET fact2 (\f \n (if (eq n 0) 1 (mul n (f (add n -1)))))
+              (Y fact2 5)]]]

@@ -1,0 +1,18 @@
+[defmacro LET 3 ((\arg0 arg2) arg1)]
+[defmacro Y 0 \f ((\x f (x x)) (\x f (x x)))]
+[LET true (\a \b a)
+ [LET false (\a \b b)
+  [LET if (\c \t \e c t e)
+   [LET pair (\a \b \c if c a b)
+    [LET fst (\p p true)
+     [LET snd (\p p false)
+      [LET zero (\f \x x)
+       [LET succ (\n \f \x f (n f x))
+        [LET add (\a \b a succ b)
+         #(add (succ (succ (succ zero))) (succ (succ zero)))
+         #(add zero (succ zero))
+         #(add (succ zero) zero)
+         #((succ (succ zero)) f x)
+         (succ zero)
+        ]]]]]]]]]
+

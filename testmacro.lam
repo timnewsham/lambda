@@ -1,0 +1,5 @@
+#!./lambda.py
+# a small example of using macros
+
+[defmacro let 3 ((\arg0 arg2) arg1)]
+[let x 3 (add x x)]

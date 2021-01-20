@@ -1,0 +1,9 @@
+#!./lambda.py
+# factorial using letrec.
+# complete stand-alone version, run with "-s" to skip the prelude.
+
+[defmacro LET 3 ((\arg0 arg2) arg1)]
+[defmacro LETREC 3 [LET arg0 ([Y] (\arg0 arg1)) arg2]]
+[LET if (\b \t \e b e t)
+ [LETREC fact (\n (if (eq n 0) 1 (mul n (fact (add n -1))))) 
+        (fact 5)]]

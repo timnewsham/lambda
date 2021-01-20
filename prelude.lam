@@ -1,0 +1,260 @@
+# prelude.lam
+# Common prelude. This file is included at the start of your program
+# unless you use the -n flag.
+
+
+# note: we dont have a () type so we have slightly different return types
+# for some functions than haskell does.  See "set" and "mapM_" for example.
+
+
+# builtins:
+#
+# add :: int -> int -> int
+#   add two integers.
+# mul :: int -> int -> int
+#   multiply two integers
+# div :: int -> int -> int
+#   div a b returns a divided by b.
+# mod :: int -> int -> int
+#   mod a b returns a modulo b.
+# lt :: int -> int -> bool
+#   return true if first value is less than second.
+#   uses the notion of bool defined lower in this file.
+# seq :: a -> b -> b
+#   force evaluation of a and return the value of b.
+# trace :: id -> a -> a
+#   emit the identifiers and value and return the value.
+
+
+
+# standard macros
+# Y :: (a -> a) -> a
+#   the fixed point combinator.
+[defmacro Y 0 \f ((\x f (x x)) (\x f (x x)))]
+# LET var val body
+#   bind a var to a value in an expression body
+[defmacro LET 3 ((\arg0 arg2) arg1)]
+# LETREC var val body
+#   bind a var to a value in an expression body that may use var.
+[defmacro LETREC 3 [LET arg0 ([Y] (\arg0 arg1)) arg2]]
+
+
+# some commonly useful functions
+[defmacro WITHFUNCS 1
+ # dot :: (b -> c) -> (a -> b) -> (a -> c)
+ #   function composition: f (g x).
+ [LET dot (\f \g \x f (g x))
+ # flip :: (a -> b -> c) -> (b -> a -> c)
+ #   reverse the order of arguments to a binary function.
+ [LET flip (\f \x \y f y x)
+   arg0]]]
+
+
+# booleans
+# data bool = false | true
+# note: builtins that return bool assume these definitions of true and false.
+[defmacro WITHBOOL 1
+ # false :: bool
+ [LET false (\x \y x)
+ # true :: bool
+ [LET true (\x \y y)
+ # not :: bool -> bool
+ #   boolean negation.
+ [LET not (\b b true false)
+ # and :: bool -> bool -> bool
+ #   logical conjunction.
+ [LET and (\a \b a false b)
+ # or :: bool -> bool -> bool
+ #   logical disjunction.
+ [LET or (\a \b a b true)
+ # if :: bool -> a -> a -> a
+ #   choose between two values (then and else) based on a boolean.
+ [LET if (\b \t \e b e t)
+ # bool2Int :: bool -> int
+ #   convert a boolean value to integer zero (false) or 1 (true).
+ [LET bool2Int (\b 0 1)
+ # int2bool :: int -> bool
+ #   convert an integer value (zero for false, nonzero for true) to a boolean.
+ [LET int2bool (\i if (eq i 0) true false)
+ # traceBool :: id -> bool -> bool
+ #   emit id and bool and return the input value.
+ [LET traceBool (\id \b seq (if b (trace id True)
+                                  (trace id False)) b)
+   arg0 ]]]]]]]]]]
+
+# some more number definitions
+[defmacro WITHNUM 1
+ [WITHBOOL
+  # neg :: int -> int
+  #   return the negative of the input value
+  [LET neg (\x mul x -1)
+  # sub :: int -> int -> int
+  #   subtract the second value from the first
+  [LET sub (\x \y add x (neg y))
+  # le :: int -> int -> int
+  #   true if first value less than or equal to second.
+  [LET le (\x \y or (lt x y) (eq x y))
+  # gt :: int -> int -> int
+  #   true if first value greater than the second.
+  [LET gt (dot not le)
+  # ge :: int -> int -> int
+  #   true if first value greater than or equal to the second.
+  [LET ge (dot not lt)
+    arg0 ]]]]]]]
+
+# tuples
+[defmacro WITHTUPLE 1
+  # tuple :: a -> b -> tuple a b
+  #   return a tuple containing the two values
+  [LET tuple (\a \b \f f a b)
+  # fst :: tuple a b -> a
+  #   return the first value of a tuple
+  [LET fst (\t t \a \b a)
+  # snd :: tuple a b -> b
+  #   return the second value of a tuple
+  [LET snd (\t t \a \b b)
+  # curry :: (tuple a b -> c) -> (a -> b -> c)
+  #   convert a function on tuples to a function on two args.
+  [LET curry (\f \a \b f (tuple a b))
+  # uncurry :: (a -> b -> c) -> (tuple a b -> c) 
+  #   convert a function on two args into a function on tuples
+  [LET uncurry (\f \t f (fst t) (snd t))
+  # traceTuple :: id -> id -> tuple a b -> tuple a b
+  #   emit the two values of the tuple using the two id's and return the value
+  [LET traceTuple (\id1 \id2 \t seq (seq (trace id1 (fst t))
+                                         (trace id2 (snd t))) t)
+  # traceTuple2 :: (id -> a -> a) -> (id -> b -> b) -> (tuple a b -> tuple a b)
+  #   emit the values of a tuple using two trace functions, returning the value
+  [LET traceTuple2 (\tr1 \tr2 \t seq (seq (tr1 (fst t))
+                                          (tr2 (snd t))) t)
+    arg0 ]]]]]]]]
+
+
+# algebraic data type for lists, mapped to lambda expressions.
+# see http://www.cs.nott.ac.uk/~nhn/TFP2006/Papers/03-JansenKoopmanPlasmeijer-EfficientInterpretation.pdf
+# data list = nil | cons x xs
+[defmacro WITHLIST 1
+ [WITHFUNCS
+ [WITHBOOL 
+  # nil :: list a
+  #   The empty list.
+  [LET nil (\f \g f)
+  # cons :: a -> list a -> list a
+  #   A list made up of a head element and a tail list.
+  [LET cons (\x \xs \f \g g x xs)
+  # app :: list a -> list a -> list a
+  #   Concatenate two lists by appending the second to the first.
+  [LETREC app (\xs \zs xs zs (\y \ys (cons y (app ys zs))))
+  # null :: list a -> bool
+  #   True if the list is empty.
+  [LET null (\xs xs true (\y \ys false))
+  # head :: list a -> a
+  #   The first element of a list or emptyListError.
+  [LET head (\xs xs emptyListError (\y \ys y))
+  # tail :: list a -> list a
+  #   The tail of a list or emptyListError.
+  [LET tail (\xs xs emptyListError (\y \ys ys))
+  # length :: list a -> int
+  #   The length of a list.
+  [LETREC length (\xs xs 0 (\y \ys (add 1 (length ys))))
+  # map :: (a -> b) -> (list a -> list b)
+  #   Map a function over a list.
+  [LETREC map (\ff \xs xs nil (\y \ys (cons (ff y) (map ff ys))))
+  # fold :: (a -> b -> b) -> b -> list a -> b
+  #   Right fold of a list.
+  [LETREC fold (\f \x0 \xs xs x0 (\y \ys f y (fold f x0 ys)))
+  # sum :: list int -> int
+  #   The sum of a list.
+  [LET sum (fold add 0)
+  # last :: list a -> a
+  #   The last element in a list or emptyListError.
+  [LETREC last (\xs xs emptyListError (\y \ys if (null ys) y (last ys)))
+  # iter :: a -> (a -> a) -> list a
+  #   An infinite list formed by repeatedly running a function on an initial value.
+  [LETREC iter (\f \x0 (cons x0 (iter f (f x0))))
+  # take :: int -> list a -> list a
+  #   Take the first n items from a list.
+  [LETREC take (\n \xs (if (eq n 0) nil (xs nil (\y \ys (cons y (take (add n -1) ys))))))
+  # drop :: (a -> bool) -> list a -> list a
+  #   Return a list of elements tha satisfy the predicate.
+  [LETREC filter (\p \xs xs nil (\y \ys if (p y) (cons y (filter p ys)) (filter p ys)))
+  # nubBy :: (a -> a -> bool) -> list a -> list a
+  #   Return a list of items that are not equal, according to an equality function
+  [LETREC nubBy (\f \xs xs nil (\y \ys (cons y (nubBy f (filter (dot not (f y)) ys)))))
+  # nub :: list a -> list a
+  #   Return a list of items that are not equal to each other.
+  [LET nub (nubBy eq)
+  # traceList :: id -> list a -> list a
+  # XXX hack for dumping out a list.  The sum forces evaluation of trace for
+  # each element.
+  [LET traceList (\id \xs seq (sum (map (trace id) xs)) xs)
+           arg0 ]]]]]]]]]]]]]]]]]]]]
+
+
+# monad helpers.  Assumes return, bind and seq_ are in scope.
+[defmacro WITHMONADHELPERS 1
+ # mtrace :: id -> a -> m a
+ [LET mtrace (\a \b return (trace a b))
+ # bind_ :: m a -> m b -> m b
+ #   Like bind but throws away the value from m a.
+ [LET bind_ (\f \g bind f (\x seq_ x g))
+ # liftM :: (a -> b) -> (m a -> m b)
+ [LET liftM (\f \m bind m (dot return f))
+ # liftM2 :: (a -> b -> c) -> (m a -> m b -> m c)
+ [LET liftM2 (\f \ma \mb bind ma (\a bind mb (\b return (f a b))))
+ # mapM :: (a -> m b) -> (list a -> m list b)
+ [LETREC mapM (\f \xs xs (return nil) (\y \ys liftM2 cons (f y) (mapM f ys)))
+ # mapM_ :: (a -> m b) -> (list a -> int)
+ #    Like mapM but don't build a real return value, just return zero.
+ [LETREC mapM_ (\f \xs xs (return 0) (\y \ys bind_ (f y) (mapM_ f ys)))
+   arg0 ]]]]]]]
+
+# state monad (state -> (value, state))
+# type state a s = state -> (a, s)
+[defmacro WITHSTATE 1
+ [WITHTUPLE
+  # return :: a -> state a
+  [LET return tuple
+  # bind :: m a -> (a -> m b) -> m b
+  [LET bind (\f \g \s uncurry g (f s))
+  # seq_ :: m a -> m b -> m b
+  [LET seq_ (\x \y y)
+  # run :: state a s -> s -> tuple a s
+  [LET run (\m \s m s)
+  # eval :: state a s -> s -> a
+  [LET eval (\m \s fst (m s))
+  # exec :: state a s -> s -> s
+  [LET exec (\m \s snd (m s))
+  # get :: state a s 
+  #    Set the result to the state.
+  [LET get (\s tuple s s)
+  # set :: s -> state s s
+  #    Set the state to the input and set the result to the same value.
+  #    (unlike haskell's State set, ours returns its own value.)
+  [LET set (\x \s tuple x x)
+  # traceState :: state a s -> state a s
+  #    Emit the value and state and return the input.
+  [LET traceState (traceTuple Value State)
+    arg0 ]]]]]]]]]]]
+
+# IO monad.  It's basically the state monad where the state is
+# not really used for anything other than dependencies. 
+# In this scope seq_ is defined to be seq so that bind_ forces
+# evaluation of the unused argument.  Normally seq_ is defined
+# to be non-strict in the unused argument.
+#
+# type io a = state a int
+[defmacro WITHIO 1
+ [WITHSTATE 
+  # seq_ :: a -> io a
+  [LET seq_ seq
+  # traceIO :: io a -> io a
+  [LET traceIO traceState
+    arg0 ]]]]
+
+# The body should evaluate to a state monad which is evaluated
+# giving it the starting input of zero.
+[defmacro WITHMAIN 1
+ [WITHIO
+    (eval arg0 0) ]]
+

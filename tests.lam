@@ -1,0 +1,77 @@
+#!./lambda.py
+# a collection of test cases.  
+
+#[WITHBOOL (if (eq 1 1) 3 5) ]
+#[WITHBOOL (if (eq 1 0) 3 5) ]
+#[WITHBOOL (if (lt 1 1) 3 5) ]
+#[WITHBOOL (if (lt 0 1) 3 5) ]
+#[WITHBOOL (traceBool Val true)]
+#[WITHBOOL (traceBool Val false)]
+#[WITHBOOL (traceBool Val (not false))]
+#[WITHBOOL (traceBool Val (not true))]
+
+# some list tests
+#[WITHLIST [LET lst (cons 3 (cons 4 (cons 5 nil)))
+        #(length lst)
+        #(fold add 0 lst)
+        #lst
+        #(map (add 2) lst) 
+        #(length (map (add 2) lst)) 
+        #(fold add 0 lst (map (add 2) lst))  # XXX broken
+        #(head (map (add 2) lst))
+        #(head lst)
+        #(head (tail lst))
+        #(head (tail (tail lst)))
+        #(head (tail (tail (tail lst))))
+        #(null lst)
+        #(null (tail (tail (tail lst))))
+        #(sum lst)
+        #[NIL]
+        #[CONS 2 [NIL]]
+        #(head [CONS 2 [NIL]])
+        #((\x [CONS (add 2 x) [NIL]]) 3)
+        #(head ((\x [CONS (add 2 x) [NIL]]) 3))
+        #(map (add 2) lst)
+        #(head (map (add 2) lst))
+        #(head (tail (map (add 2) lst)))
+#]]
+
+#[WITHLIST 
+#  [LET lst (cons 3 (cons 2 (cons 1 nil)))
+#     (sum (map (add 5) lst))]]
+
+
+# test that tuples work properly
+#[WITHTUPLE (fst (tuple 3 4))]
+#[WITHTUPLE (snd (tuple 3 4))]
+#[WITHTUPLE (traceTuple First Second (tuple 3 4))]
+
+# test that return is working properly...
+#[WITHSTATE (traceState (run (return 3) 99))]
+#[WITHSTATE (exec (return 3) 99)]
+#[WITHSTATE (eval (return 3) 99)]
+
+# test that liftM2 is working, which tests bind as well...
+#[WITHSTATE [WITHMONADHELPERS (traceState (run (liftM2 add (return 3) (return 2)) 99)) ]]
+
+
+# try out get and set and make sure both value and state are working
+#[WITHSTATE [WITHMONADHELPERS
+#  (traceState (run (bind_ (bind get (\x set (add x -5)))
+#                          (return 55)) 99)) ]]
+
+
+# try out mapM_
+# should result in 14 (10 + 1 + 2 + 1)
+#[WITHSTATE [WITHMONADHELPERS [WITHLIST
+#  [LET incr (\d bind get (\x set (add x d)))
+#    (traceState (run (mapM_ incr (cons 1 (cons 2 (cons 1 nil)))) 10)) ]]]]
+
+
+# try out mapM
+# should result in state 14 (10 + 1 + 2 + 1) and value [11, 13, 14] 
+#[WITHSTATE [WITHMONADHELPERS [WITHLIST
+#  [LET incr (\d bind get (\x set (add x d)))
+#    (traceTuple2 (traceList Val) (trace State)
+#       (run (mapM incr (cons 1 (cons 2 (cons 1 nil)))) 10)) ]]]]
+

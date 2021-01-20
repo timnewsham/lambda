@@ -1,0 +1,20 @@
+#!./lambda.py
+# towers of hanoi, using IO monad and mtrace for output
+
+[WITHMAIN
+[WITHMONADHELPERS
+[WITHLIST
+ [LET lst3 (\a \b \c (cons a (cons b (cons c nil))))
+ [LET start (lst3 3 2 1)
+ [LET traceMove (\x \a \c 
+          (bind_ (mtrace Move x)
+                 (bind_ (mtrace From a)
+                        (mtrace To__ c))))
+ [LETREC hanoi (\xs \a \b \c 
+          (xs (return done)
+              (\y \ys (bind_ (hanoi ys a c b)
+                             (bind_ (traceMove y a c)
+                                    (hanoi ys b a c))))))
+   (hanoi start 1 2 3)
+ ]]]]]]]
+

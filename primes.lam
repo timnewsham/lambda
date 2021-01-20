@@ -1,0 +1,12 @@
+#!./lambda.py
+# generate the first ten prime numbers
+
+[WITHMAIN
+[WITHMONADHELPERS
+[WITHLIST
+ [LET from2 (iter (add 1) 2)
+ [LET primes (nubBy (\x \y (eq (mod y x) 0)) from2)
+  (bind_
+    (traceList Val (take 10 primes))
+    (return done))
+ ]]]]]

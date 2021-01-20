@@ -1,0 +1,13 @@
+#!./lambda.py
+# a (strange) example of using IO...
+
+[WITHMAIN
+[WITHLIST
+[WITHMONADHELPERS
+  [LET printList (\xs mapM_ (mtrace printList) xs)
+  [LET traceList (\id \xs mapM (mtrace id) xs)
+  [LET xs (cons 1 (cons 2 (cons 3 nil)))
+    (bind_ (printList xs) 
+           (bind (traceList XXX xs)
+                 (\ys return (sum ys))))
+]]]]]]

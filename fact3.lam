@@ -1,0 +1,9 @@
+#!./lamb.py -s
+# factorial using the fixed point operator
+# complete defn without any prelude
+
+[defmacro LET 3 ((\arg0 arg2) arg1)]
+[LET if (\b \t \e b e t)
+ [LET Y (\f ((\x f (x x)) (\x f (x x))))
+   [LET fact2 (\f \n (if (eq n 0) 1 (mul n (f (add n -1)))))
+              (Y fact2 5)]]]
